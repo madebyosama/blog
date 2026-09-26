@@ -1,13 +1,13 @@
 // Cloudflare config: a static site served as Workers static assets.
 // `name` must match the Worker's name in the Cloudflare dashboard.
 {
-  "name": "madebyosama-blog",
+  "name": "blog",
   "compatibility_date": "2026-09-01",
   "assets": {
     "directory": "./dist",
     // Unknown URLs get dist/404.html with a 404 status.
     "not_found_handling": "404-page",
     // /about → /about/ (matches trailingSlash: 'always' in astro.config.mjs).
-    "html_handling": "auto-trailing-slash"
-  }
+    "html_handling": "auto-trailing-slash",
+  },
 }
