@@ -1,6 +1,13 @@
-// Cloudflare Pages project config, used by `wrangler pages deploy`.
+// Cloudflare config: a static site served as Workers static assets.
+// `name` must match the Worker's name in the Cloudflare dashboard.
 {
   "name": "madebyosama-blog",
   "compatibility_date": "2026-09-01",
-  "pages_build_output_dir": "./dist"
+  "assets": {
+    "directory": "./dist",
+    // Unknown URLs get dist/404.html with a 404 status.
+    "not_found_handling": "404-page",
+    // /about → /about/ (matches trailingSlash: 'always' in astro.config.mjs).
+    "html_handling": "auto-trailing-slash"
+  }
 }

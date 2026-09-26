@@ -1,6 +1,6 @@
 # Build report — blog.madebyosama.com
 
-Stack as built: Astro 7.3.5 (static output), TypeScript strict, plain CSS, pnpm, Node 22+, Pagefind 1.5, Pages CMS, Cloudflare Pages.
+Stack as built: Astro 7.3.5 (static output), TypeScript strict, plain CSS, pnpm, Node 22+, Pagefind 1.5, Pages CMS, Cloudflare (Workers static assets).
 
 ## Lighthouse
 
@@ -63,8 +63,8 @@ Lighthouse's total transfer for the home page is about 31 KB, font included.
 4. **Markdown images are WebP, not AVIF.** Astro's Markdown image pipeline always outputs WebP. AVIF is available per image with `<Picture formats={['avif','webp']}>` in an `.mdx` post. At these file sizes the difference is a few KB.
 5. **Syntax highlighting uses Shiki's `css-variables` theme.** Colours are CSS custom properties with light and dark values tuned to the palette (muted, no neon), not two bundled themes. This avoids duplicating colours inline on every token.
 6. **CMS: Pages CMS, not Keystatic.** Both are maintained, and Keystatic's Astro integration supports Astro 7. But Keystatic needs React, a server adapter and an on-demand `/keystatic` route, which would end the pure-static build. Pages CMS is a hosted editor driven by one `.pages.yml` file, it works with any Astro version, and it commits straight to the repo. The post body uses its plain Markdown editor instead of the rich-text editor, so `==marks==`, footnotes and fenced code survive round-trips unchanged.
-7. **Hosting: Cloudflare Pages (static), not Workers.** Pages supports a plain `CNAME blog` from an external DNS provider, gives every branch a preview URL, and honours `public/_headers`. Deploys run from GitHub Actions with `wrangler pages deploy`. The same workflow's daily cron publishes scheduled posts.
-8. **Analytics is the only script outside `/search`.** The Cloudflare Web Analytics beacon is a third-party script. It's included only when the `CF_BEACON_TOKEN` variable is set, and the Lighthouse runs above were done without it.
+7. **Hosting: Cloudflare Workers static assets.** Cloudflare's "Import a repository" flow now creates a Worker, so `wrangler.jsonc` is a static-assets config: no Worker script, a real 404 page, trailing-slash redirects, and `public/_headers` honoured. Cloudflare builds every push and gives branches preview URLs. A GitHub Action only rebuilds daily, to publish scheduled posts.
+8. **Analytics is the only script outside `/search`.** The Cloudflare Web Analytics beacon is a third-party script. It's included only when the `PUBLIC_CF_BEACON_TOKEN` build variable is set, and the Lighthouse runs above were done without it.
 9. **Urdu posts set `lang="ur" dir="rtl"` on the title and body, not on `<html>`.** This keeps the English header, navigation and footer left-to-right on a mixed page. Satori can't shape Nastaliq, so Urdu posts use the site-wide OG image.
 10. **In lists, link posts point to their own page** (with ↗ after the title), so the commentary is always read. The post's `h1` then links out to the source.
 11. **Year pagination is not implemented yet.** The home page is the full archive, as the spec says to do until about 150 posts.
@@ -76,4 +76,4 @@ Lighthouse's total transfer for the home page is about 31 KB, font included.
 - Replace the placeholder copy marked `TODO` in `src/content/pages/about.md` and `now.md`.
 - Confirm the email, LinkedIn and X handles in `src/site.config.ts`.
 - Finalize the accent colour (see deviation 3).
-- Complete the Cloudflare setup in the README's Deploy section (Pages project, API token, DNS, optional analytics token).
+- Complete the Cloudflare setup in the README's Deploy section (Worker project settings, custom domain, API token for the daily rebuild, optional analytics token).

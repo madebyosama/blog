@@ -120,21 +120,24 @@ The post body uses a plain Markdown editor instead of a rich-text editor, so `==
 
 ## Deploy
 
-GitHub Actions builds every push (`.github/workflows/deploy.yml`) and deploys it to Cloudflare Pages:
+The site is a Cloudflare Worker that serves the static files in `dist/` (config: `wrangler.jsonc`). Cloudflare builds straight from GitHub:
 
-- **`main`** goes to production at https://blog.madebyosama.com
-- **any other branch** gets a preview URL like `https://<branch>.madebyosama-blog.pages.dev`, printed in the job log
-- **daily at 01:07 UTC**, `main` is rebuilt so scheduled posts go live
+- **push to `main`** → production (https://blog.madebyosama.com)
+- **push any other branch** → a preview URL, shown in the Cloudflare dashboard and on the commit in GitHub
+- **daily at 01:07 UTC** → `.github/workflows/deploy.yml` rebuilds `main` so scheduled posts go live
 
 One-time setup:
 
-1. Create the Pages project:
-   `pnpm dlx wrangler pages project create madebyosama-blog --production-branch=main`
-2. Create a Cloudflare API token with the **Cloudflare Pages: Edit** permission. In GitHub, go to repo **Settings → Secrets and variables → Actions** and add the secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
-3. Custom domain: in the Pages project, go to **Custom domains** and add `blog.madebyosama.com`. At your DNS provider, add `CNAME blog → madebyosama-blog.pages.dev`. If the zone is on Cloudflare, it does this for you.
-4. Analytics (optional, cookieless): create a site in **Cloudflare Web Analytics**, copy its token, and add it as the repository **variable** `CF_BEACON_TOKEN`. Without the token, no analytics script is added.
+1. Cloudflare dashboard → **Workers & Pages → Create → Import a repository** → pick this repo.
+   - Project name: `madebyosama-blog` (must match `name` in `wrangler.jsonc`)
+   - Build command: `pnpm build`
+   - Deploy command: `npx wrangler deploy`
+   - Non-production branch deploy command: `npx wrangler versions upload`
+2. **Custom domain**: the Worker → **Settings → Domains & Routes → Add → Custom domain** → `blog.madebyosama.com`. This needs madebyosama.com's DNS on Cloudflare; Cloudflare then creates the record itself.
+3. **Daily rebuild**: create an API token (**My Profile → API Tokens → Create Token → "Edit Cloudflare Workers" template**), then in GitHub **Settings → Secrets and variables → Actions** add the secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
+4. **Analytics** (optional, cookieless): create a site in **Cloudflare Web Analytics** and copy its token. Add it as a build variable `PUBLIC_CF_BEACON_TOKEN` (Worker → **Settings → Build → Variables and secrets**) and as the GitHub repository **variable** `CF_BEACON_TOKEN`. Without the token, no analytics script is added.
 
-Cache headers are in `public/_headers`. Hashed files under `/_astro/` are cached for a year and marked immutable.
+Cache headers live in `public/_headers`. Hashed files under `/_astro/` are cached for a year and marked immutable.
 
 ## Newsletter (off)
 
