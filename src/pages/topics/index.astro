@@ -1,0 +1,26 @@
+---
+import Base from '../../layouts/Base.astro';
+import { TOPICS, type Topic } from '../../site.config';
+import { getPosts } from '../../lib/posts';
+
+const posts = await getPosts();
+const topics = (Object.keys(TOPICS) as Topic[])
+  .map((slug) => ({ slug, label: TOPICS[slug], count: posts.filter((p) => p.data.topics.includes(slug)).length }))
+  .filter((t) => t.count > 0);
+---
+
+<Base title="Topics" description="Everything on the blog, sorted by topic." current="topics">
+  <h1 class="label">Topics</h1>
+  <ul class="rows">
+    {
+      topics.map((t) => (
+        <li class="topic-row">
+          <a href={`/topics/${t.slug}/`}>{t.label}</a>
+          <span class="count">
+            {t.count} {t.count === 1 ? 'post' : 'posts'}
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+</Base>

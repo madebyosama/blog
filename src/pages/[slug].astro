@@ -1,0 +1,112 @@
+---
+import { render } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import Newsletter from '../components/Newsletter.astro';
+import { SITE, TOPICS } from '../site.config';
+import { formatLong, getPosts, hostname, isoDate, minutesToRead, summary, type Post } from '../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts(); // newest first
+  return posts.map((post, i) => ({
+    params: { slug: post.id },
+    props: { post, newer: posts[i - 1], older: posts[i + 1] },
+  }));
+}
+
+interface Props {
+  post: Post;
+  newer?: Post | undefined;
+  older?: Post | undefined;
+}
+
+const { post, newer, older } = Astro.props;
+const { title, date, updated, type, link, topics, lang } = post.data;
+const { Content } = await render(post);
+
+const minutes = minutesToRead(post);
+const url = new URL(`/${post.id}/`, SITE.url).href;
+const image = lang === 'ur' ? '/og.png' : `/og/${post.id}.png`;
+const rtl = lang === 'ur';
+const description = summary(post);
+
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BlogPosting',
+  headline: title,
+  description,
+  datePublished: date.toISOString(),
+  dateModified: (updated ?? date).toISOString(),
+  inLanguage: lang,
+  url,
+  mainEntityOfPage: url,
+  image: new URL(image, SITE.url).href,
+  keywords: topics.map((t) => TOPICS[t]).join(', '),
+  author: { '@type': 'Person', name: SITE.author, url: SITE.links.home },
+  ...(link ? { isBasedOn: link } : {}),
+};
+
+const replySubject = encodeURIComponent(`Re: ${title}`);
+---
+
+<Base
+  title={title}
+  description={description}
+  current="writing"
+  image={image}
+  type="article"
+  jsonLd={jsonLd}
+  urdu={rtl}
+  publishedTime={date.toISOString()}
+>
+  <a class="back" href="/">← Writing</a>
+  <article data-pagefind-body>
+    <header class="post-header">
+      <h1 lang={rtl ? 'ur' : undefined} dir={rtl ? 'rtl' : undefined}>
+        {type === 'link' && link ? <a class="ext" href={link}>{title}</a> : title}
+      </h1>
+      <p class="meta">
+        <time datetime={isoDate(date)} data-pagefind-meta={`date:${isoDate(date)}`}>{formatLong(date)}</time>
+        {updated && <> (updated <time datetime={isoDate(updated)}>{formatLong(updated)}</time>)</>}
+        {' · '}{minutes} min read
+        {topics.length > 0 && ' · '}
+        {topics.map((t, i) => <>{i > 0 && ', '}<a href={`/topics/${t}/`}>{TOPICS[t]}</a></>)}
+        {link && <>{' · '}via <a href={link}>{hostname(link)}</a></>}
+      </p>
+    </header>
+    <div class="prose" lang={rtl ? 'ur' : undefined} dir={rtl ? 'rtl' : undefined}>
+      <Content />
+    </div>
+  </article>
+
+  <footer class="post-end" data-pagefind-ignore>
+    <p>
+      <a href={`mailto:${SITE.email}?subject=${replySubject}`}>Reply via email</a>
+      <span class="muted">{' — I read everything.'}</span>
+    </p>
+    {
+      (older || newer) && (
+        <nav class="pager" aria-label="More posts">
+          <p>
+            {older && (
+              <>
+                <span class="small">← Previous</span>
+                <br />
+                <a href={`/${older.id}/`}>{older.data.title}</a>
+              </>
+            )}
+          </p>
+          <p>
+            {newer && (
+              <>
+                <span class="small">Next →</span>
+                <br />
+                <a href={`/${newer.id}/`}>{newer.data.title}</a>
+              </>
+            )}
+          </p>
+        </nav>
+      )
+    }
+    {SITE.newsletter.enabled && <Newsletter />}
+  </footer>
+</Base>

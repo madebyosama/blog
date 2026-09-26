@@ -1,0 +1,115 @@
+# Pages CMS (https://pagescms.org) — edit posts from a browser or phone.
+# It reads and writes the same Markdown files in this repo, via GitHub. No database.
+# Sign in at https://app.pagescms.org with GitHub and open this repository.
+
+media:
+  # Uploaded images are saved here and referenced as @images/… in Markdown,
+  # which Astro optimises like any other local image.
+  input: src/assets/images
+  output: '@images'
+  rename: safe
+  categories: [image]
+
+content:
+  - name: posts
+    label: Posts
+    type: collection
+    path: src/content/posts
+    format: yaml-frontmatter
+    filename: '{primary}.md'
+    subfolders: true
+    view:
+      primary: title
+      fields: [title, date, type, draft]
+      sort: date
+      order: desc
+    fields:
+      - name: title
+        label: Title
+        type: string
+        required: true
+      - name: description
+        label: Description
+        description: One sentence for search engines and social cards. Optional for notes.
+        type: text
+      - name: date
+        label: Date
+        description: Set a future date to schedule the post.
+        type: date
+        required: true
+        options:
+          format: yyyy-MM-dd
+      - name: updated
+        label: Updated
+        type: date
+        default: ''
+        options:
+          format: yyyy-MM-dd
+      - name: type
+        label: Type
+        type: select
+        required: true
+        default: essay
+        options:
+          values: [essay, note, link]
+      - name: link
+        label: Link (link posts only)
+        type: string
+        pattern:
+          regex: '^https?://'
+          message: Must be a full URL starting with https://
+      - name: topics
+        label: Topics
+        description: Add new topics in src/site.config.ts first, then here.
+        type: select
+        options:
+          multiple: true
+          values: [design, development, product, marketing, fitness, communication, networking]
+      - name: draft
+        label: Draft
+        description: Drafts are never published.
+        type: boolean
+        default: true
+      - name: lang
+        label: Language
+        type: select
+        default: en
+        options:
+          values: [en, ur]
+      - name: body
+        label: Text
+        description: Markdown. ==highlight==, footnotes[^1] and ```code``` all work.
+        # A plain Markdown editor keeps the file exactly as written.
+        type: code
+        options:
+          format: markdown
+
+  - name: about
+    label: About
+    type: file
+    path: src/content/pages/about.md
+    format: yaml-frontmatter
+    fields: &page
+      - name: title
+        type: string
+        required: true
+      - name: description
+        type: text
+        required: true
+      - name: updated
+        type: date
+        default: ''
+        options:
+          format: yyyy-MM-dd
+      - name: body
+        label: Text
+        type: code
+        options:
+          format: markdown
+
+  - name: now
+    label: Now
+    type: file
+    path: src/content/pages/now.md
+    format: yaml-frontmatter
+    fields: *page

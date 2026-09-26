@@ -1,0 +1,106 @@
+---
+import Base from '../layouts/Base.astro';
+import { SITE } from '../site.config';
+const host = new URL(SITE.url).host;
+---
+
+<Base title="Search" description="Search everything on the blog." current="search">
+  <h1 class="label">Search</h1>
+  <!-- Without JavaScript this is a plain DuckDuckGo site search. -->
+  <form class="inline" id="search-form" action="https://duckduckgo.com/" method="get" role="search">
+    <label class="sr-only" for="q">Search posts</label>
+    <input id="q" type="search" name="q" placeholder="Search posts…" autocomplete="off" />
+    <input type="hidden" name="sites" value={host} />
+    <button type="submit">Search</button>
+  </form>
+  <p id="search-status" class="small" role="status"></p>
+  <ol id="search-results" class="results"></ol>
+</Base>
+
+<style is:global>
+  .results {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+  .results li {
+    padding-block: 12px;
+    border-bottom: 1px solid var(--rule);
+  }
+  .results a {
+    text-decoration: none;
+  }
+  .results a:hover {
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+  }
+  .results p {
+    margin: 4px 0 0;
+  }
+</style>
+
+<script is:inline type="module">
+  // Pagefind's JS API, rendered in the site's own row style. Only this page loads it.
+  const form = document.getElementById('search-form');
+  const input = document.getElementById('q');
+  const status = document.getElementById('search-status');
+  const list = document.getElementById('search-results');
+  let pagefind;
+
+  async function load() {
+    if (!pagefind) {
+      pagefind = await import('/pagefind/pagefind.js');
+      await pagefind.options({ excerptLength: 24 });
+      pagefind.init();
+    }
+    return pagefind;
+  }
+
+  async function run(q) {
+    const url = new URL(location.href);
+    q ? url.searchParams.set('q', q) : url.searchParams.delete('q');
+    history.replaceState(null, '', url);
+    if (!q.trim()) {
+      list.replaceChildren();
+      status.textContent = '';
+      return;
+    }
+    let pf;
+    try {
+      pf = await load();
+    } catch {
+      status.textContent = 'Search index not found. It’s built with the site (pnpm build).';
+      return;
+    }
+    const search = await pf.debouncedSearch(q, {}, 200);
+    if (search === null) return; // superseded by a newer keystroke
+    const results = await Promise.all(search.results.slice(0, 20).map((r) => r.data()));
+    status.textContent = `${search.results.length} ${search.results.length === 1 ? 'result' : 'results'}`;
+    list.replaceChildren(
+      ...results.map((r) => {
+        const li = document.createElement('li');
+        const a = document.createElement('a');
+        a.href = r.url;
+        a.textContent = r.meta.title;
+        const p = document.createElement('p');
+        p.className = 'small';
+        p.innerHTML = r.excerpt; // Pagefind escapes content; only <mark> remains.
+        li.append(a, p);
+        return li;
+      }),
+    );
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    run(input.value);
+  });
+  input.addEventListener('input', () => run(input.value));
+  input.addEventListener('focus', load, { once: true });
+
+  const initial = new URLSearchParams(location.search).get('q');
+  if (initial) {
+    input.value = initial;
+    run(initial);
+  }
+</script>

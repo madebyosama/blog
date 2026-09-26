@@ -1,0 +1,16 @@
+---
+import Base from '../layouts/Base.astro';
+import PostRows from '../components/PostRows.astro';
+import { getPosts } from '../lib/posts';
+
+const latest = (await getPosts()).slice(0, 5);
+---
+
+<Base title="Not found" description="This page doesn’t exist." noindex>
+  <h1>Page not found.</h1>
+  <p>Nothing lives at this address. <a href="/">Go home</a>, or try one of the latest posts.</p>
+  <section class="year" aria-labelledby="latest">
+    <h2 class="label" id="latest">Latest</h2>
+    <PostRows posts={latest} />
+  </section>
+</Base>

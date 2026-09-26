@@ -1,0 +1,39 @@
+name: Build & deploy
+
+on:
+  push:
+    branches: ['**']
+  # Rebuild daily so future-dated posts go live on their date (01:07 UTC ≈ 06:07 in Pakistan).
+  schedule:
+    - cron: '7 1 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+        env:
+          PUBLIC_CF_BEACON_TOKEN: ${{ vars.CF_BEACON_TOKEN }}
+      # main → production (blog.madebyosama.com). Any other branch → a preview URL
+      # like https://<branch>.madebyosama-blog.pages.dev, printed in the job log.
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy dist --project-name=madebyosama-blog --branch=${{ github.ref_name }} --commit-dirty=true

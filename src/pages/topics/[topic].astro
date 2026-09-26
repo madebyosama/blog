@@ -1,0 +1,37 @@
+---
+import Base from '../../layouts/Base.astro';
+import PostRows from '../../components/PostRows.astro';
+import { TOPICS, TOPIC_SLUGS, type Topic } from '../../site.config';
+import { getPosts, groupByYear } from '../../lib/posts';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return TOPIC_SLUGS.map((topic) => ({
+    params: { topic },
+    props: { topic, posts: posts.filter((p) => p.data.topics.includes(topic)) },
+  })).filter(({ props }) => props.posts.length > 0);
+}
+
+interface Props {
+  topic: Topic;
+  posts: Awaited<ReturnType<typeof getPosts>>;
+}
+const { topic, posts } = Astro.props;
+const label = TOPICS[topic];
+---
+
+<Base title={label} description={`Posts about ${label.toLowerCase()} by Muhammad Osama.`} current="topics">
+  <a class="back" href="/topics/">← Topics</a>
+  <h1>{label}</h1>
+  <p class="meta">{posts.length} {posts.length === 1 ? 'post' : 'posts'}</p>
+  {
+    groupByYear(posts).map(([year, list]) => (
+      <section class="year" aria-labelledby={`y${year}`}>
+        <h2 class="label" id={`y${year}`}>
+          {year}
+        </h2>
+        <PostRows posts={list} />
+      </section>
+    ))
+  }
+</Base>

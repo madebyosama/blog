@@ -1,0 +1,30 @@
+---
+// Rows of posts: short date in a fixed column, title beside it.
+import { formatShort, isoDate, isScheduled, type Post } from '../lib/posts';
+
+interface Props {
+  posts: Post[];
+}
+const { posts } = Astro.props;
+---
+
+<ul class="rows">
+  {
+    posts.map((post) => (
+      <li>
+        <time datetime={isoDate(post.data.date)}>{formatShort(post.data.date)}</time>
+        <span>
+          <a href={`/${post.id}/`}>{post.data.title}</a>
+          {post.data.type === 'link' && (
+            <>
+              <span class="arrow" aria-hidden="true">↗</span>
+              <span class="sr-only">(link)</span>
+            </>
+          )}
+          {post.data.draft && <span class="flag">draft</span>}
+          {isScheduled(post) && <span class="flag">scheduled</span>}
+        </span>
+      </li>
+    ))
+  }
+</ul>

@@ -1,0 +1,31 @@
+---
+import Base from '../layouts/Base.astro';
+import PostRows from '../components/PostRows.astro';
+import { getPosts, groupByYear } from '../lib/posts';
+
+// The home page is the archive. If it ever passes ~150 posts, split it by year.
+const years = groupByYear(await getPosts());
+---
+
+<Base current="writing">
+  <div class="intro">
+    <h1 class="sr-only">Writing</h1>
+    <p>
+      I’m Muhammad Osama, a website designer and developer. This is where I write things down:
+      product design, development, marketing, and the less technical parts of the job —
+      training, talking to people, meeting new ones.
+    </p>
+    <p class="muted">Essays, short notes and links, newest first. <a href="/about/">More about me</a>.</p>
+  </div>
+
+  {
+    years.map(([year, posts]) => (
+      <section class="year" aria-labelledby={`y${year}`}>
+        <h2 class="label" id={`y${year}`}>
+          {year}
+        </h2>
+        <PostRows posts={posts} />
+      </section>
+    ))
+  }
+</Base>

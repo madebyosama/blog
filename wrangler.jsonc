@@ -1,0 +1,6 @@
+// Cloudflare Pages project config, used by `wrangler pages deploy`.
+{
+  "name": "madebyosama-blog",
+  "compatibility_date": "2026-09-01",
+  "pages_build_output_dir": "./dist"
+}

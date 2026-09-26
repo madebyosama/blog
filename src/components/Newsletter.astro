@@ -1,0 +1,16 @@
+---
+// Buttondown via a plain form POST — no embed script. Off unless enabled in site.config.ts.
+import { SITE } from '../site.config';
+const { username } = SITE.newsletter;
+---
+
+<aside class="newsletter" aria-labelledby="newsletter-title">
+  <p id="newsletter-title">
+    New posts by email, a few times a month. No tracking, unsubscribe anytime.
+  </p>
+  <form class="inline" action={`https://buttondown.com/api/emails/embed-subscribe/${username}`} method="post">
+    <label class="sr-only" for="newsletter-email">Email address</label>
+    <input id="newsletter-email" type="email" name="email" placeholder="you@example.com" autocomplete="email" required />
+    <button type="submit">Subscribe</button>
+  </form>
+</aside>

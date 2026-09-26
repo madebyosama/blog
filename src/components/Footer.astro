@@ -1,0 +1,19 @@
+---
+import { SITE } from '../site.config';
+const year = new Date().getFullYear();
+const links = [
+  { label: 'madebyosama.com', href: SITE.links.home },
+  { label: 'Email', href: `mailto:${SITE.email}` },
+  { label: 'LinkedIn', href: SITE.links.linkedin },
+  { label: 'X', href: SITE.links.x },
+  { label: 'RSS', href: '/rss.xml' },
+];
+---
+
+<footer class="site-footer">
+  <p><em>{SITE.footerLine}</em></p>
+  <p>
+    {links.map((l, i) => <>{i > 0 && ' · '}<a href={l.href}>{l.label}</a></>)}
+  </p>
+  <p>© {year} {SITE.author}</p>
+</footer>

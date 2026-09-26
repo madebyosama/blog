@@ -1,0 +1,36 @@
+---
+import { SITE } from '../site.config';
+import type { Nav } from '../layouts/Base.astro';
+
+interface Props {
+  current?: Nav;
+}
+const { current } = Astro.props;
+
+const items: { key: Exclude<Nav, undefined> | 'rss'; label: string; href: string }[] = [
+  { key: 'writing', label: 'Writing', href: '/' },
+  { key: 'topics', label: 'Topics', href: '/topics/' },
+  { key: 'about', label: 'About', href: '/about/' },
+  { key: 'now', label: 'Now', href: '/now/' },
+  { key: 'search', label: 'Search', href: '/search/' },
+  { key: 'rss', label: 'RSS', href: '/rss.xml' },
+];
+---
+
+<header class="site-header">
+  <a class="wordmark" href="/" aria-label={`${SITE.title}, home`}>madebyosama<span>/blog</span></a>
+  <p class="tagline">{SITE.tagline}</p>
+  <nav class="nav" aria-label="Main">
+    <ul>
+      {
+        items.map((item) => (
+          <li>
+            <a href={item.href} aria-current={item.key === current ? 'page' : undefined}>
+              {item.label}
+            </a>
+          </li>
+        ))
+      }
+    </ul>
+  </nav>
+</header>

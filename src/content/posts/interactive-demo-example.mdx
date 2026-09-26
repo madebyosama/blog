@@ -1,0 +1,16 @@
+---
+title: Interactive demo example
+description: How to drop an interactive island into a post. Kept as a draft for reference.
+date: 2026-09-01
+type: essay
+topics: [development]
+draft: true
+---
+
+import LineLength from '../../components/demos/LineLength.tsx';
+
+This post is an `.mdx` file, which means it can import components. Most posts should stay plain Markdown. When a post genuinely needs something interactive, add it as an island with `client:visible`: the JavaScript loads only on this page, and only once the demo scrolls into view.
+
+<LineLength client:visible />
+
+Everything above and below the demo is still ordinary Markdown.
